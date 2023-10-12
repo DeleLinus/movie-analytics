@@ -98,7 +98,7 @@ dags:
   ##  (note, the full repo will still be cloned)
   ##
   # repoSubPath: airflow-gke/dags
-  subPath: airflow-gke/dags
+  subPath: dags
   ## the git branch to check out
   ##
   branch: master
