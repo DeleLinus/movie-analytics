@@ -75,7 +75,7 @@ logs:
 dags:
  ## the airflow dags folder
  ##
- path: /usr/local/airflow/dags
+#  path: /usr/local/airflow/dags
  ## configs for the git-sync sidecar (https://github.com/kubernetes/git-sync)
  ##
  gitSync:
@@ -97,8 +97,8 @@ dags:
   ## - only dags under this path within your repo will be seen by airflow,
   ##  (note, the full repo will still be cloned)
   ##
-  # repoSubPath: airflow-gke/dags
-  subPath: /airflow-gke/dags
+  repoSubPath: airflow-gke/dags
+  # subPath: /airflow-gke/dags
   ## the git branch to check out
   ##
   branch: master
