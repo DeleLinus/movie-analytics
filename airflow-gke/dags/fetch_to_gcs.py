@@ -1,6 +1,4 @@
-"""Load from API to GCS
-
-author: grisell.reyes@wizeline.com
+"""Load from sources to GCS
 
 Description: Ingests the data from a Public API into a gcp bucket.
 """
@@ -20,10 +18,23 @@ import requests
 import tempfile
 
 # constants
-bucket = 'africa-deb-bucket-second'
-dataset_url_1 = (
-    "https://data.montgomerycountymd.gov/resource/v76h-r7br.csv")
-dataset_file_1= "warehouse_and_details_sales.csv"
+# GCP constants
+GCP_CONN_ID = 'google_cloud_storage_capstone'
+GCS_BUCKET_NAME = 'wizeline-capstone-bucket-gideon'
+GCS_KEY_NAME = "chart-data.csv"
+
+# Postgres constants
+POSTGRES_CONN_ID = "google-demo-session-6-conn"
+POSTGRES_TABLE_NAME = "chart_data"
+
+bucket = 'wizeline-capstone-bucket-gideon'
+local_movie_reviews_path_1 = "D:\Desktop\Wizeline Bootcamp\Capstone Project\project\movie_review.csv"
+local_log_reviews_path_2 = "D:\Desktop\Wizeline Bootcamp\Capstone Project\project\log_reviews.csv"
+local_user_purchase_path_3 = "D:\Desktop\Wizeline Bootcamp\Capstone Project\project\user_purchase.csv"
+
+dataset_file_1 = "movie_review.csv"
+dataset_file_2 = "log_reviews.csv"
+dataset_file_3 = "user_purchase.csv"
 # path_to_local_home = "/opt/airflow"
 #credentials_file = Path("service_account.json")
 
@@ -38,8 +49,8 @@ def download_samples_from_url(path: str) -> None:
             file_1.write(response_1.content)
 
 def upload_file_func():
-    hook = GCSHook(gcp_conn_id='google_cloud_default')
-    bucket_name = bucket
+    hook = GCSHook(gcp_conn_id=GCP_CONN_ID)
+    bucket_name = GCS_BUCKET_NAME
     object_name = dataset_file_1
     filename = Path(dataset_file_1)
     hook.upload(bucket_name, object_name, filename)

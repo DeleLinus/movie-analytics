@@ -56,7 +56,7 @@ like so:
 ![Configured Google Cloud SDK](./imgs/cloud-sdk-configured.png "Configured Google Cloud SDK")
 
 
-7. In the GCP Console, enable:
+6. In the GCP Console, enable:
    - Compute Engine API
    - Kubernetes Engine API
 
@@ -80,13 +80,9 @@ root of the project named as *terraform.tfvars*, changing the property *project_
     ```bash
     gcloud container clusters get-credentials $(terraform output -raw kubernetes_cluster_name) --region $(terraform output -raw location)
     ```
+    _specifying it manually woked_ (gcloud container clusters get-credentials airflow-gke-data-bootcamp --region=us-east1-b) https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl
 
-10. To work with Airflow, create a NFS (Network File System) server:
-     ```bash
-     kubectl create namespace nfs # creates namespace
-     kubectl -n nfs apply -f nfs/nfs-server.yaml # creates server
-     export NFS_SERVER=$(kubectl -n nfs get service/nfs-server -o jsonpath="{.spec.clusterIP}")
-     ```
+
 10b. and Final according to Nelson:
 
      ```
@@ -95,39 +91,22 @@ root of the project named as *terraform.tfvars*, changing the property *project_
         --num-nodes 1 \
         --zone "europe-west4"
      ```
-
-
-1.  Create a namespace for storage deployment:
-     ```bash
-     kubectl create namespace storage
-     ```
-
-2.  Add the chart for the nfs-provisioner:
-     ```bash
-     helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-     ```
-
-3.  Install nfs-external-provisioner:
-     ```bash
-     helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-     --namespace storage \
-     --set nfs.server=$NFS_SERVER \
-     --set nfs.path=/
-     ```
-
-4.  Create a namespace for Airflow:
+(https://github.com/airflow-helm/charts/blob/main/charts/airflow/docs/guides/quickstart.md provides guides as listed below to install helm stable airflow chart)
+14.  Create a namespace for Airflow:
     ```bash
-    kubectl create namespace airflow
+    kubectl create ns airflow
     ```
 
-5.  Add the chart repository:
+15.  Add the chart repository:
     ```bash
-    helm repo add apache-airflow https://airflow.apache.org
+    helm repo add airflow-stable https://airflow-helm.github.io/charts
+    ## update your helm repo cache
+    helm repo update
     ```
 
-6.  Install the Airflow chart from the repository:
+16.  Install the Airflow chart from the repository:
     ```bash
-    helm upgrade --install airflow -f airflow-values.yaml apache-airflow/airflow --namespace airflow
+    helm install airflow airflow-stable/airflow  --namespace airflow  --version 8.8.0 --values airflow-values.yaml
     ```
     ***IMPORTANT***: This process might take around 5 minutes to execute, **be patient please**.
 
@@ -228,7 +207,100 @@ to match your project ID.
     helm repo add apache-airflow https://airflow.apache.org
     helm upgrade --install airflow -f airflow-values.yaml apache-airflow/airflow --namespace airflow
     ```
+## Components not runnning?
+1. Skip steps that involves NFS, that is, step 11 to 14.
+2. Use the Airflow Community Chart:\
+   a. Step 16:
+   ```
+    helm repo add airflow-stable https://airflow-helm.github.io/charts
+    helm repo update
+   ```
+3. Edit the airflow-values.yaml file to the Community Chart values (file at the end). Remember to change the “repo” and “repoSubPath” parameters of gitSync to your own repo when you have a DAG that is ready to test, for now it’s the hello_world.py in the Google-Africa-DEB repo.
+4. Before deploying the new chart, remember to remove any remaining PVC (if you deployed before the official chart of if you want a clean deploy). Replace $PVC_NAME with the name of the PVC to delete.
+   
+        kubectl get pvc -A
+        kubectl delete pvc $PVC_NAME -n airflow
 
+5. Deploy airflow\
+    a. Step 17:
+
+        - helm upgrade --install airflow -f airflow-values.yaml airflow-stable/airflow --namespace airflow
+        - helm delete airflow -n  airflow  
+        - helm upgrade --install airflow airflow-stable/airflow --namespace airflow
+6. Connect to the web interface
+
+        kubectl port-forward svc/${AIRFLOW_NAME}-web 8080:8080 --namespace $AIRFLOW_NAMESPACE
+    (${AIRFLOW_NAME} and $AIRFLOW_NAMESPACE should be: **airflow**)
+```
+###################################
+## COMPONENT | Triggerer
+###################################
+triggerer:
+ ## if the airflow triggerer should be deployed
+ ## - [WARNING] the triggerer component was added in airflow 2.2.0
+ ## - [WARNING] if `airflow.legacyCommands` is `true` the triggerer will NOT be deployed
+ ##
+ enabled: false
+###################################
+## COMPONENT | Flower
+###################################
+flower:
+ ## if the airflow flower UI should be deployed
+ ##
+ enabled: false
+###################################
+## CONFIG | Airflow Logs
+###################################
+logs:
+ ## the airflow logs folder
+ ##
+ path: /usr/local/airflow/logs
+ ## configs for the logs PVC
+ ##
+ persistence:
+  ## if a persistent volume is mounted at `logs.path`
+  ##
+  enabled: false
+###################################
+## CONFIG | Airflow DAGs
+###################################
+dags:
+ ## the airflow dags folder
+ ##
+ path: /usr/local/airflow/dags
+ ## configs for the git-sync sidecar (https://github.com/kubernetes/git-sync)
+ ##
+ gitSync:
+  ## if the git-sync sidecar container is enabled
+  ##
+  enabled: true
+  ## the url of the git repo
+  ##
+  ## ____ EXAMPLE _______________
+  ##  # https git repo
+  ##  repo: https://github.com/USERNAME/REPOSITORY.git”
+  ##
+  ## ____ EXAMPLE _______________
+  ##  # ssh git repo
+  ##  repo: “git@github.com:USERNAME/REPOSITORY.git”
+  ##
+  repo: https://github.com/wizelineacademy/Google-Africa-DEB
+  ## the sub-path within your repo where dags are located
+  ## - only dags under this path within your repo will be seen by airflow,
+  ##  (note, the full repo will still be cloned)
+  ##
+  repoSubPath: session_04/exercises/airflow-gke/dags
+  ## the git branch to check out
+  ##
+  branch: main
+###################################
+## DATABASE | PgBouncer
+###################################
+pgbouncer:
+ ## if the pgbouncer Deployment is created
+ ##
+ enabled: false
+ ```
 ## Resources
 1. [Airflow Documentation](https://airflow.apache.org/docs/apache-airflow/stable/)
 2. [Terraform GCP Documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
