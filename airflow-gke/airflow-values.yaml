@@ -97,8 +97,8 @@ dags:
   ## - only dags under this path within your repo will be seen by airflow,
   ##  (note, the full repo will still be cloned)
   ##
-  repoSubPath: "dags"
-  # subPath: "dags"
+  # repoSubPath: "dags"
+  subPath: "dags"
   ## the git branch to check out
   ##
   branch: master
