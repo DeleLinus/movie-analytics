@@ -38,15 +38,15 @@ dataset_file_3 = "user_purchase.csv"
 # path_to_local_home = "/opt/airflow"
 #credentials_file = Path("service_account.json")
 
-def download_samples_from_url(path: str) -> None:
-    """Downloads a set of samples into the specified path.
+# def load_samples_from_local_path(path: str) -> None:
+#     """Downloads a set of samples into the specified path.
 
-    Args:
-        path (str): Path to output file.
-    """
-    response_1 = requests.get(dataset_url_1)
-    with open(dataset_file_1, mode="wb") as file_1:
-            file_1.write(response_1.content)
+#     Args:
+#         path (str): Path to output file.
+#     """
+#     response_1 = requests.get(dataset_url_1)
+#     with open(dataset_file_1, mode="wb") as file_1:
+#             file_1.write(response_1.content)
 
 def upload_file_func():
     hook = GCSHook(gcp_conn_id=GCP_CONN_ID)
@@ -64,7 +64,7 @@ default_args = {
 
 with DAG(
     dag_id="data_ingestion_gcs_dag",
-    schedule_interval="@daily", # https://airflow.apache.org/docs/apache-airflow/1.10.1/scheduler.html
+    schedule_interval="@once", # https://airflow.apache.org/docs/apache-airflow/1.10.1/scheduler.html
     default_args=default_args,
     catchup=False,
     max_active_runs=1,

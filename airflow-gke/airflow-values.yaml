@@ -92,12 +92,12 @@ dags:
   ##  # ssh git repo
   ##  repo: “git@github.com:USERNAME/REPOSITORY.git”
   ##
-  repo: https://github.com/DeleLinus/movie-analytics
+  repo: https://github.com/DeleLinus/movie-analytics.git
   ## the sub-path within your repo where dags are located
   ## - only dags under this path within your repo will be seen by airflow,
   ##  (note, the full repo will still be cloned)
   ##
-  repoSubPath: /airflow-gke/dags
+  repoSubPath: airflow-gke/dags
   # subPath: /airflow-gke/dags
   ## the git branch to check out
   ##
